@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="WildGS-SLAM: Monocular Gaussian Splatting SLAM in Dynamic Environments">
+  <meta name="keywords" content="WildGS-SLAM: Monocular Gaussian Splatting SLAM in Dynamic Environments">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WildGS-SLAM</title>
+
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="./static/css/bootstrap-4.4.1.css">
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'G-PYVRSFMDRL');
+  </script> -->
+
+  
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+  
+  
+  
+  
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <!-- <link rel="icon" href="./static/images/72.png"> -->
+
+  
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+  <script src="./static/js/app.js"></script>
+  <script src="./static/js/video_comparison.js"></script>
+
+  <link rel="stylesheet" href="./static/css/dics.original.css">
+  <script src="./static/js/event_handler.js"></script>
+  <script src="./static/js/dics.original.js"></script>
+
+  <script>
+    function switchWildSlamSeq(index) {
+      // Hide all tab panes
+      const tabPanes = document.querySelectorAll('.tab-pane');
+      tabPanes.forEach(pane => {
+        pane.style.display = 'none';
+        pane.classList.remove('active');
+      });
+      
+      // Remove active class from all nav items
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      // Show the selected tab pane and set the tab as active
+      if (index === 0) {
+        document.getElementById('Any1').style.display = 'block';
+        document.getElementById('Any1').classList.add('active');
+      } else if (index === 1) {
+        document.getElementById('Any2').style.display = 'block';
+        document.getElementById('Any2').classList.add('active');
+      } else if (index === 2) {
+        document.getElementById('Ball').style.display = 'block';
+        document.getElementById('Ball').classList.add('active');
+      } else if (index === 3) {
+        document.getElementById('Crowd').style.display = 'block';
+        document.getElementById('Crowd').classList.add('active');
+      } else if (index === 4) {
+        document.getElementById('Person').style.display = 'block';
+        document.getElementById('Person').classList.add('active');
+      } else if (index === 5) {
+        document.getElementById('Racket').style.display = 'block';
+        document.getElementById('Racket').classList.add('active');
+      } else if (index === 6) {
+        document.getElementById('Stones').style.display = 'block';
+        document.getElementById('Stones').classList.add('active');
+      } else if (index === 7) {
+        document.getElementById('Table1').style.display = 'block';
+        document.getElementById('Table1').classList.add('active');
+      } else if (index === 8) {
+        document.getElementById('Table2').style.display = 'block';
+        document.getElementById('Table2').classList.add('active');
+      } else if (index === 9) {
+        document.getElementById('Umbrella').style.display = 'block';
+        document.getElementById('Umbrella').classList.add('active');
+      }
+      
+      // Set the clicked nav item as active
+      document.querySelectorAll('.nav-item')[index].classList.add('active');
+      
+      // Trigger resize for videos that might be visible now
+      const videos = document.querySelectorAll('.video');
+      videos.forEach(video => {
+        if (video.offsetParent !== null) {  // Check if video is visible
+          if (typeof resizeAndPlay === 'function') {
+            resizeAndPlay(video);
+          }
+        }
+      });
+    }
+  </script>
+  
+
+
+</head>
+<body>
+
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <!-- <h1 class="title is-1 publication-title"><img src="static/images/72.png" width="70"></h1> -->
+          <h1 class="title is-1 publication-title">WildGS-SLAM</h1>
+          <h2 class="title is-2 publication-title" style="margin-top: 0; margin-bottom: 0">Monocular Gaussian Splatting SLAM in Dynamic Environments</h2>
+
+          <div class="column is-full_width">
+            <h2 class="title is-4">CVPR 2025</h2>
+          </div>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <a href="https://jianhao-zheng.github.io/">Jianhao Zheng</a><sup>1*</sup></span>&nbsp;&nbsp;&nbsp;&nbsp;
+              <span class="author-block">
+                <a href="https://zzh2000.github.io">Zihan Zhu</a><sup>2*</sup></span>&nbsp;&nbsp;&nbsp;&nbsp;
+              <span class="author-block">
+              <a href="https://openreview.net/profile?id=~Valentin_Bieri1">Valentin Bieri</a><sup>2</sup>&nbsp;&nbsp;&nbsp;&nbsp;
+            </span>
+            <span class="author-block">
+              <a href="https://people.inf.ethz.ch/pomarc/">Marc Pollefeys</a><sup>2,3</sup>&nbsp;&nbsp;
+              <!-- &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -->
+            </span>
+            <!-- <br> -->
+            <span class="author-block">
+              <a href="https://pengsongyou.github.io">Songyou Peng</a><sup>2</sup>&nbsp;&nbsp;&nbsp;&nbsp;
+            </span>
+            <span class="author-block">
+              <!-- <a href="https://zhpcui.github.io/">Zhaopeng Cui</a><sup>2<span>&#8224;</span> </sup>&nbsp;&nbsp;&nbsp;&nbsp; -->
+              <a href="https://ir0.github.io/">Iro Armeni</a><sup>1</sup>&nbsp;&nbsp;&nbsp;&nbsp;
+            </span>
+
+          </div>
+          <div class="column is-full_width">
+            <h2 class="is-size-6">* Equal Contribution</h2>
+            <!-- <h2 class="is-size-6">(* equal contribution)  (<span>&#8224;</span> corresponding author)</h2> -->
+          </div>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup>Stanford University</span>&nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="author-block"><sup>2</sup>ETH Zürich</span>&nbsp;&nbsp;
+            <span class="author-block"><sup>3</sup>Microsoft</span>&nbsp;&nbsp;
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <!-- PDF Link. -->
+              <span class="link-block">
+                <a href="https://arxiv.org/abs/2504.03886"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>Paper</span>
+                </a>
+              </span>
+              
+              <!-- Video Link. -->
+              <span class="link-block">
+                <a href="https://www.youtube.com/watch?v=xXuolzFvddQ&t=11s"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-youtube"></i>
+                  </span>
+                  <span>Video</span>
+                </a>
+              </span>
+              <!-- Poster Link. -->
+              <!-- <span class="link-block">
+                <a href="media/nice-slam/poster_nice-slam.pdf"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-palette"></i>
+                  </span>
+                  <span>Poster</span>
+                  </a>
+              </span> -->
+
+              <!-- Code Link. -->
+              <span class="link-block">
+                <a href="https://github.com/GradientSpaces/WildGS-SLAM.git"
+                   class="external-link button is-normal is-rounded is-dark disabled">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code</span>
+                  </a>
+              </span>
+
+  
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="hero teaser" style="margin-top: -3rem;">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-full-width">
+          <video class="video" width="100%" id="xyalias6" loop playsinline autoplay muted src="resources/demo.mp4" onplay="videoPlay(this)" style="height: 0px;"></video>
+          <canvas height=0 class="videoMerge" id="xyalias6Merge"></canvas>
+      
+          <h2 class="subtitle has-text-centered" style="margin-top: 14px">
+            TL;DR: We present WildGS-SLAM, a robust monocular RGB SLAM system that uses uncertainty-aware tracking and mapping to handle dynamic scenes, leveraging DINOv2-based uncertainty maps for dynamic object removal, improving tracking, mapping, and enable high-quality view synthesis.
+          </h2>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3" style="margin-top: -60px">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            We present WildGS-SLAM, a robust and efficient monocular RGB SLAM system designed to handle dynamic environments by leveraging uncertainty-aware geometric mapping. Unlike traditional SLAM systems, which assume static scenes, our approach integrates depth and uncertainty information to enhance tracking, mapping, and rendering performance in the presence of moving objects. We introduce an uncertainty map, predicted by a shallow multi-layer perceptron and DINOv2 features, to guide dynamic object removal during both tracking and mapping. This uncertainty map enhances dense bundle adjustment and Gaussian map optimization, improving reconstruction accuracy. Our system is evaluated on multiple datasets and demonstrates artifact-free view synthesis. Results showcase WildGS-SLAM's superior performance in dynamic environments compared to state-of-the-art methods.
+          </p>
+        </div>
+      </div>
+    </div>
+    <!--/ Abstract. -->
+    <!-- Paper video. -->
+    
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Video</h2>
+        <div class="publication-video">
+          <iframe src="https://www.youtube.com/embed/xXuolzFvddQ?rel=0&amp;showinfo=0"
+                  frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+   
+    <!--/ Paper video. -->
+  </div>
+</section>
+
+
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <!-- Method. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3" style="margin-top: -20px">Method</h2>
+
+        <img src="./resources/pipeline_without_mosaic.png" class="center">
+        <div class="content has-text-justified">
+          <p style="margin-top: 30px">
+            <b>WildGS-SLAM</b> takes a sequence of RGB images as input and simultaneously estimates the camera poses
+            while building a 3D Gaussian map of the static scene. Our method is more robust to the dynamic environment due to the uncertainty
+            estimation module, where a pretrained DINOv2 model is first used to extract the image features. An uncertainty MLP then utilizes
+            the extracted features to predict per-pixel uncertainty. During the tracking, we leverage the predicted uncertainty as the weight in the dense
+            bundle adjustment (DBA) layer to mitigate the impact of dynamic distractors. We further use monocular metric depth to facilitate the pose
+            estimation. In the mapping module, the predicted uncertainty is incorporated into the rendering loss to update the 3D Gaussian map. Moreover, the uncertainty
+            loss is computed in parallel to train the uncertainty MLP. Note that both the uncertainty MLP and 3D Gaussian map are optimized independently, as illustrated by the gradient flow in the gray dashed line. 
+          </p>
+        </div>
+
+      </div>
+    </div>
+    <!--/ Animation. -->
+
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <!-- Method. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3" style="margin-top: -20px">
+          Wild-SLAM Datasets
+          <a href="https://huggingface.co/datasets/gradient-spaces/Wild-SLAM" 
+             class="is-size-5 ml-3" target="_blank" rel="noopener noreferrer" 
+             style="display: inline-flex; align-items: center; background-color: #f5f5f5; padding: 4px 10px; border-radius: 4px;">
+            <span class="icon">
+              <img src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg" alt="Hugging Face" 
+                   style="height: 24px; width: auto;">
+            </span>
+            <span style="margin-left: 5px;">Available on Hugging Face</span>
+          </a>
+        </h2>
+        <div class="content has-text-justified">
+          <p style="margin-top: 10px">
+            To further assess performance in unconstrained, real-world settings, we introduce the Wild-SLAM Dataset, comprising two subsets: Wild-SLAM MoCap and Wild-SLAM iPhone. 
+          </p>
+        </div>
+        
+
+        <h2 class="title is-4" style="margin-top: -10px">Wild-SLAM MoCap Dataset</h2>
+        <img src="./resources/wildslam_mocap.gif" class="center" style="margin-top: -20px; margin-bottom: -20px;">
+
+        <div class="content has-text-justified">
+          <p style="margin-top: 30px">
+            The Wild-SLAM MoCap Dataset includes 10 RGB-D sequences featuring various moving objects as distractors, specifically designed for dynamic SLAM benchmarking. The sequences are recorded with an Intel RealSense D455 camera with a fixed exposure time. Although WildGS-SLAM works with only monocular inputs, depth images are also included in the dataset to support the evaluation of other RGB-D baselines or future research. The room is equipped with an OptiTrack motion capture system, providing ground truth camera trajectories.
+          </p>
+        </div>
+        
+        <h2 class="title is-4" style="margin-top: -10px">Wild-SLAM iPhone Dataset</h2>
+        <img src="./resources/wildslam_iphone.gif" class="center" style="margin-top: -20px; margin-bottom: -20px;">
+
+        <div class="content has-text-justified">
+          <p style="margin-top: 30px">
+            To further assess performance in more unconstrained, real-world scenarios, 
+            we collected the Wild-SLAM iPhone Dataset, which comprises 8 non-staged RGB sequences recorded with an iPhone 14 Pro. 
+            These sequences comprise 4 outdoor and 4 indoor scenes, 
+            showcasing a variety of daily-life activities such as strolling along streets, 
+            shopping, navigating a parking garage, and exploring an art museum. 
+            Since ground truth trajectories are not available for this dataset, it is used solely for qualitative experiments.
+          </p>
+        </div>
+
+      </div>
+    </div>
+    <!--/ Animation. -->
+
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <!-- Results. -->
+    <div class="columns is-centered ">
+      <div class="column is-full-width">
+        <h2 class="title is-3 has-text-centered" style="margin-top: -30px">Results</h2>
+
+        <h3 class="title is-4">Wild-SLAM Mocap</h3>
+
+        <div class="columns is-centered">
+          <div class="column">
+            <div class="video-container has-text-centered">
+              <video id="video1" controls preload="auto" height="100%">
+                <source src="./resources/results/stones.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+              <!-- <p class="caption">First video caption</p> -->
+            </div>
+          </div>
+          <div class="column">
+            <div class="video-container has-text-centered">
+              <video id="video2" controls preload="auto" height="100%">
+                <source src="./resources/results/umbrella.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+              <!-- <p class="caption">Second video caption</p> -->
+            </div>
+          </div>
+        </div>
+
+        <h3 class="title is-5">Rendering</h3>
+        
+        <div class="container is-max-desktop">
+          <!-- Navigation tabs with Bootstrap-style -->
+          <ul class="nav nav-tabs nav-fill nav-justified" id="dataset-tabs">
+            <li class="nav-item active">
+              <a class="nav-link" onclick="switchWildSlamSeq(2)">Ball</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" onclick="switchWildSlamSeq(3)">Crowd</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" onclick="switchWildSlamSeq(4)">Person</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" onclick="switchWildSlamSeq(5)">Racket</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" onclick="switchWildSlamSeq(6)">Stones</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" onclick="switchWildSlamSeq(7)">Table1</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" onclick="switchWildSlamSeq(8)">Table2</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" onclick="switchWildSlamSeq(9)">Umbrella</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" onclick="switchWildSlamSeq(0)">ANYmal1</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" onclick="switchWildSlamSeq(1)">ANYmal2</a>
+            </li>
+          </ul>
+
+          <!-- Content container -->
+          <div class="tab-content">
+            <div class="tab-pane" id="Any1" style="display: none;>
+              <div class="columns is-centered has-text-centered">
+                <div class="column is-full-width">
+                  <video class="video" width="50%" id="Any1Video" loop playsinline autoplay muted src="resources/results/render_anymal1.mp4" onplay="resizeAndPlay(this)" style="height: 0px;"></video>
+                  <canvas height=0 class="videoMerge" id="Any1VideoMerge"></canvas>
+                </div> 
+              </div>
+            </div>
+            
+            <div class="tab-pane" id="Any2" style="display: none;">
+              <div class="columns is-centered has-text-centered">
+                <div class="column is-full-width">
+                  <video class="video" width="50%" id="Any2Video" loop playsinline autoplay muted src="resources/results/render_anymal2.mp4" onplay="resizeAndPlay(this)" style="height: 0px;"></video>
+                  <canvas height=0 class="videoMerge" id="Any2VideoMerge"></canvas>
+                </div>
+              </div>
+            </div>
+            
+            <div class="tab-pane active" id="Ball"">
+              <div class="columns is-centered has-text-centered">
+                <div class="column is-full-width">
+                  <video class="video" width="50%" id="BallVideo" loop playsinline autoplay muted src="resources/results/render_ball.mp4" onplay="resizeAndPlay(this)" style="height: 0px;"></video>
+                  <canvas height=0 class="videoMerge" id="BallVideoMerge"></canvas>
+                </div>
+              </div>
+            </div>
+            
+            <div class="tab-pane" id="Crowd" style="display: none;">
+              <div class="columns is-centered has-text-centered">
+                <div class="column is-full-width">
+                  <video class="video" width="50%" id="CrowdVideo" loop playsinline autoplay muted src="resources/results/render_crowd.mp4" onplay="resizeAndPlay(this)" style="height: 0px;"></video>
+                  <canvas height=0 class="videoMerge" id="CrowdVideoMerge"></canvas>
+                </div>
+              </div>
+            </div>
+            
+            <div class="tab-pane" id="Person" style="display: none;">
+              <div class="columns is-centered has-text-centered">
+                <div class="column is-full-width">
+                  <video class="video" width="50%" id="PersonVideo" loop playsinline autoplay muted src="resources/results/render_person_tracking.mp4" onplay="resizeAndPlay(this)" style="height: 0px;"></video>
+                  <canvas height=0 class="videoMerge" id="PersonVideoMerge"></canvas>
+                </div>
+              </div>
+            </div>
+            
+            <div class="tab-pane" id="Racket" style="display: none;">
+              <div class="columns is-centered has-text-centered">
+                <div class="column is-full-width">
+                  <video class="video" width="50%" id="RacketVideo" loop playsinline autoplay muted src="resources/results/render_racket.mp4" onplay="resizeAndPlay(this)" style="height: 0px;"></video>
+                  <canvas height=0 class="videoMerge" id="RacketVideoMerge"></canvas>
+                </div>
+              </div>
+            </div>
+            
+            <div class="tab-pane" id="Stones" style="display: none;">
+              <div class="columns is-centered has-text-centered">
+                <div class="column is-full-width">
+                  <video class="video" width="50%" id="StonesVideo" loop playsinline autoplay muted src="resources/results/render_stones.mp4" onplay="resizeAndPlay(this)" style="height: 0px;"></video>
+                  <canvas height=0 class="videoMerge" id="StonesVideoMerge"></canvas>
+                </div>
+              </div>
+            </div>
+            
+            <div class="tab-pane" id="Table1" style="display: none;">
+              <div class="columns is-centered has-text-centered">
+                <div class="column is-full-width">
+                  <video class="video" width="50%" id="Table1Video" loop playsinline autoplay muted src="resources/results/render_table_tracking1.mp4" onplay="resizeAndPlay(this)" style="height: 0px;"></video>
+                  <canvas height=0 class="videoMerge" id="Table1VideoMerge"></canvas>
+                </div>
+              </div>
+            </div>
+            
+            <div class="tab-pane" id="Table2" style="display: none;">
+              <div class="columns is-centered has-text-centered">
+                <div class="column is-full-width">
+                  <video class="video" width="50%" id="Table2Video" loop playsinline autoplay muted src="resources/results/render_table_tracking2.mp4" onplay="resizeAndPlay(this)" style="height: 0px;"></video>
+                  <canvas height=0 class="videoMerge" id="Table2VideoMerge"></canvas>
+                </div>
+              </div>
+            </div>
+            
+            <div class="tab-pane" id="Umbrella" style="display: none;">
+              <div class="columns is-centered has-text-centered">
+                <div class="column is-full-width">
+                  <video class="video" width="50%" id="UmbrellaVideo" loop playsinline autoplay muted src="resources/results/render_umbrella.mp4" onplay="resizeAndPlay(this)" style="height: 0px;"></video>
+                  <canvas height=0 class="videoMerge" id="UmbrellaVideoMerge"></canvas>
+                </div>
+              </div>
+            </div>
+
+        <p style="margin-top: 30px"></p>
+        <h3 class="title is-4">Wild-SLAM iPhone</h3>
+
+        <div class="columns is-centered">
+          <div class="column">
+            <div class="video-container has-text-centered">
+              <video id="video1" controls preload="auto" height="100%">
+                <source src="./resources/results/street.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+              <!-- <p class="caption">First video caption</p> -->
+            </div>
+          </div>
+          <div class="column">
+            <div class="video-container has-text-centered">
+              <video id="video2" controls preload="auto" height="100%">
+                <source src="./resources/results/tower.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+              <!-- <p class="caption">Second video caption</p> -->
+            </div>
+          </div>
+        </div>
+        
+        
+        <div style="height: 50px;"></div> 
+        <h3 class="title is-4">Bonn RGB-D Dynamic Dataset (crowd)</h3>
+
+        <p style="margin-top: -60px">
+          <div class="container is-max-desktop">
+            <div class="hero-body">
+              <div class="columns is-centered has-text-centered">
+                <div class="column is-full-width">
+                  <video class="video" width="50%" id="xyalias7" loop playsinline autoplay muted src="resources/results/bonn_crowd.mp4" onplay="resizeAndPlay(this)" style="height: 0px;"></video>
+                  <canvas height=0 class="videoMerge" id="xyalias7Merge"></canvas>
+                </div> 
+              </div> 
+            </div> 
+          </div> 
+        </p>
+        
+        <!-- <br> -->
+    
+        <p style="margin-top: -60px">
+          <div style="height: 50px;"></div> 
+          <h3 class="title is-4">TUM RGB-D Dataset (rgbd_dataset_freiburg3_walking_rpy)</h3>
+        </p>
+    
+        <p style="margin-top: -60px">
+          <div class="container is-max-desktop">
+            <div class="hero-body">
+              <div class="columns is-centered has-text-centered">
+                <div class="column is-full-width">
+                  <video class="video" width="50%" id="xyalias8" loop playsinline autoplay muted src="resources/results/tum_walking_half.mp4" onplay="resizeAndPlay(this)" style="height: 0px;"></video>
+                  <canvas height=0 class="videoMerge" id="xyalias8Merge"></canvas>
+                </div> 
+              </div> 
+            </div> 
+          </div> 
+        </p>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+
+<p style="margin-top: -60px">
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@inproceedings{Zheng2025WildGS,
+      author={Zheng, Jianhao and Zhu, Zihan and Bieri, Valentin and Pollefeys, Marc and Peng, Songyou and Armeni Iro},
+      title     = {WildGS-SLAM: Monocular Gaussian Splatting SLAM in Dynamic Environments},
+      booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+      year      = {2025}
+    }</code></pre>
+  </div>
+</section>
+</p>
+
+<section class="section" id="Acknowledgements">
+  <div class="container is-max-desktop content">
+    <h2 class="title">Acknowledgements</h2>
+     We thank Sayan Deb Sarkar, Tao Sun, Ata Celen, Liyuan Zhu, Emily Steiner, Jikai Jin, Yiming Zhao, 
+     Matt VanCleave, Tess Ruby Horowitz Buckley, Stanley Wang for their help in Wild-SLAM data collection.
+     We thank Aleesa Pitchamarn Alexander for granting permission to release the data collected from the 
+     <a href="https://museum.stanford.edu/exhibitions/spirit-house">Spirit House</a> exhibition. 
+     We also thank Aleesa Pitchamarn Alexander, Robert M. and Ruth L. Halperin for curating the exhibition, 
+     as well as all the participating artists, particularly Dominique Fung, Stephanie H. Shih, and Tammy Nguyen whose 
+     art works are prominently captured in the video data.
+  </div>
+</section>
+
+<!-- <section class="section" id="References">
+  <div class="container is-max-desktop content">
+
+        <h3 class="title is-4">References</h3>
+        <div class="content has-text-justified">
+          <ul>
+            <li>
+              <a href="https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/" target="_blank">3D Gaussian Splatting for Real-Time Radiance Field Rendering</a>
+            </li>
+            <li>
+              <a href="https://www.cs.umd.edu/~zwicker/publications/EWASplatting-TVCG02.pdf" target="_blank">EWA Splatting</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+</section> -->
+
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This website is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+            This webpage template is from <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>. 
+            We sincerely thank <a href="https://keunhong.com/">Keunhong Park</a> for developing and open-sourcing this template. 
+            The video comparison with sliding bar is from <a href="https://dorverbin.github.io/refnerf/">Ref-NeRF</a>. 
+            The image comparison with sliding bar is from <a href="https://research.nvidia.com/labs/dir/neuralangelo/">Neuralangelo</a>. 
+          </p>
+        </div>
+      </div>
+          <p></p>
+        </div>
+      </div>
+</footer>
+
+</body>
+</html>

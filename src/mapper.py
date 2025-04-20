@@ -61,6 +61,10 @@ class Mapper(object):
         torch.autograd.set_detect_anomaly(True)
 
         self.config = slam.cfg
+        self.cameras = {}
+        self.image_queue = slam.image_queue
+        print(f"Image queue: {self.image_queue}")
+        self.slam = slam
         self.printer: Printer = slam.printer
         self.pipe = pipe
         self.verbose = slam.verbose
@@ -89,7 +93,7 @@ class Mapper(object):
         self._set_hyperparams()
 
         # Set frame reader (where we get the input dataset)
-        self.frame_reader = get_dataset(self.config, device=self.device)
+        self.frame_reader = get_dataset(self.config, device=self.device, image_queue=self.image_queue)
         self.intrinsics = as_intrinsics_matrix(self.frame_reader.get_intrinsic()).to(
             self.device
         )
@@ -167,7 +171,6 @@ class Mapper(object):
             frame_info = self.pipe.recv()
             frame_idx, video_idx = frame_info["timestamp"], frame_info["video_idx"]
             is_init, is_finished = frame_info["just_initialized"], frame_info["end"]
-
             if is_finished:
                 self.printer.print("Done with Mapping and Tracking", FontColor.MAPPER)
                 break
@@ -262,7 +265,9 @@ class Mapper(object):
 
             if self.config['gui']:
                 self._send_to_gui(video_idx)
-
+            
+            self.printer.print("TERMINATE :D", FontColor.MAPPER)
+            self.slam.terminate()
             self.pipe.send("continue")
 
     """

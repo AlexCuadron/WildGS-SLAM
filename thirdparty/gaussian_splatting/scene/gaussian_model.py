@@ -353,7 +353,14 @@ class GaussianModel:
         mkdir_p(os.path.dirname(path))
 
         xyz = self._xyz.detach().cpu().numpy()
-        print("Nbr Gaussians: ", xyz.shape)
+        print("Nbr Gaussians (before sampling):", xyz.shape[0])
+        keep_ratio = 0.01
+        n_points = xyz.shape[0]
+        n_keep = int(n_points * keep_ratio)
+        indices = np.random.choice(n_points, n_keep, replace=False)
+
+        # === Subsample all attributes ===
+        xyz = xyz[indices]
         normals = np.zeros_like(xyz)
         f_dc = (
             self._features_dc.detach()
@@ -362,6 +369,7 @@ class GaussianModel:
             .contiguous()
             .cpu()
             .numpy()
+            [indices]
         )
         f_rest = (
             self._features_rest.detach()
@@ -370,10 +378,11 @@ class GaussianModel:
             .contiguous()
             .cpu()
             .numpy()
+            [indices]
         )
-        opacities = self._opacity.detach().cpu().numpy()
-        scale = self._scaling.detach().cpu().numpy()
-        rotation = self._rotation.detach().cpu().numpy()
+        opacities = self._opacity.detach().cpu().numpy()[indices]
+        scale = self._scaling.detach().cpu().numpy()[indices]
+        rotation = self._rotation.detach().cpu().numpy()[indices]
 
         dtype_full = [
             (attribute, "f4") for attribute in self.construct_list_of_attributes()
@@ -384,6 +393,7 @@ class GaussianModel:
         )
         elements[:] = list(map(tuple, attributes))
         el = PlyElement.describe(elements, "vertex")
+        print("Nbr Gaussians (after sampling):", elements.shape[0])
         PlyData([el]).write(path)
 
     def reset_opacity(self):

@@ -1,6 +1,9 @@
 inherit_from: ./configs/Dynamic/Wild_SLAM_iPhone/wild_slam_iphone.yaml
 scene: iphone_parking
 
+gui: False
+fast_mode: True
+device: "cuda:0"
 data:
   input_folder: ROOT_FOLDER_PLACEHOLDER/parking
 

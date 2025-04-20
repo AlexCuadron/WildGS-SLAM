@@ -1,6 +1,7 @@
 import glob
 import os
 import math
+import time
 
 import cv2
 import numpy as np
@@ -60,9 +61,12 @@ def load_img_feature(idx,path,suffix=''):
     return feat_tensor  
 
 
-def get_dataset(cfg, device='cuda:0'):
-    return dataset_dict[cfg['dataset']](cfg, device=device)
-
+def get_dataset(cfg, device='cuda:0', image_queue=None):
+    print(f"Getting dataset: {cfg['dataset']}")
+    print(f"Image queue: {image_queue}")
+    return QueueDataset(cfg, device=device, image_queue=image_queue)
+#def get_dataset(cfg, device='cuda:0'):
+#    return dataset_dict[cfg['dataset']](cfg, device=device)
 
 class BaseDataset(Dataset):
     def __init__(self, cfg, device='cuda:0'):
@@ -429,11 +433,111 @@ class RGB_NoPose(BaseDataset):
         self.color_paths = self.color_paths[:max_frames][::stride]
         self.n_img = len(self.color_paths)
 
+class QueueDataset(RGB_NoPose):
+    def __init__(self, cfg, device='cuda:0', image_queue=None):
+        """
+        Initialize the dataset with a queue for image loading instead of files.
+        
+        Args:
+            cfg: Configuration dictionary.
+            device: Torch device.
+            image_queue: A queue containing serialized image data.
+        """
+        super(QueueDataset, self).__init__(cfg, device)
+        self.image_queue = image_queue
+        self.n_img = 100000 # Make the dataset effectively infinite
+        self.color_paths = None  # No need for placeholder paths with infinite dataset
+        self.depth_paths = None
+        self.poses = None
+    
+    def get_color(self, index):
+        """
+        Get the color image from the queue. Wait if queue is empty.
+        
+        Args:
+            index: Index of the image (not used with queue)
+            
+        Returns:
+            Processed color image tensor
+        """
+        # Wait for image if queue is empty
+        while self.image_queue.empty():
+            print("Queue is empty")
+            time.sleep(0.1)  # Small sleep to avoid busy waiting
+        
+        # Get serialized image data from queue
+        serialized_image = self.image_queue.get()
+        
+        color_data_fullsize = serialized_image
+        
+        if self.distortion is not None:
+            K = np.eye(3)
+            K[0, 0], K[0, 2], K[1, 1], K[1, 2] = self.fx_orig, self.cx_orig, self.fy_orig, self.cy_orig
+            # undistortion is only applied on color image, not depth!
+            color_data_fullsize = cv2.undistort(color_data_fullsize, K, self.distortion)
+
+        color_data = cv2.resize(color_data_fullsize, (self.W_out_with_edge, self.H_out_with_edge))
+        color_data = torch.from_numpy(color_data).float().permute(2, 0, 1)[[2, 1, 0], :, :] / 255.0  # bgr -> rgb, [0, 1]
+        color_data = color_data.unsqueeze(dim=0)  # [1, 3, h, w]
+
+        # crop image edge, there are invalid value on the edge of the color image
+        if self.W_edge > 0:
+            edge = self.W_edge
+            color_data = color_data[:, :, :, edge:-edge]
+
+        if self.H_edge > 0:
+            edge = self.H_edge
+            color_data = color_data[:, :, edge:-edge, :]
+        
+        return color_data
+    
+    def get_color_full_resol(self, index):
+        """
+        Get the full resolution color image from the queue.
+        
+        Args:
+            index: Index of the image (not used with queue)
+            
+        Returns:
+            Processed color image tensor at full resolution
+        """
+        # Wait for image if queue is empty
+        while self.image_queue.empty():
+            time.sleep(0.01)  # Small sleep to avoid busy waiting
+        
+        # Get serialized image data from queue but don't remove it
+        # We're just peeking at the most recent image
+        serialized_image = self.image_queue.queue[-1]  # Access without removing
+        
+        # Deserialize and process the image
+        color_data_fullsize = serialized_image
+        
+        if self.distortion is not None:
+            K = np.eye(3)
+            K[0, 0], K[0, 2], K[1, 1], K[1, 2] = self.fx_orig, self.cx_orig, self.fy_orig, self.cy_orig
+            # undistortion is only applied on color image, not depth!
+            color_data_fullsize = cv2.undistort(color_data_fullsize, K, self.distortion)
+
+        color_data_fullsize = torch.from_numpy(color_data_fullsize).float().permute(2, 0, 1)[[2, 1, 0], :, :] / 255.0  # bgr -> rgb, [0, 1]
+        color_data_fullsize = color_data_fullsize.unsqueeze(dim=0)  # [1, 3, h, w]
+
+        # crop image edge, there are invalid value on the edge of the color image
+        if self.W_edge_full > 0:
+            edge = self.W_edge_full
+            color_data_fullsize = color_data_fullsize[:, :, :, edge:-edge]
+
+        if self.H_edge_full > 0:
+            edge = self.H_edge_full
+            color_data_fullsize = color_data_fullsize[:, :, edge:-edge, :]
+        
+        return color_data_fullsize
+
 dataset_dict = {
     "replica": Replica,
     "scannet": ScanNet,
     "tumrgbd": TUM_RGBD,
     "bonn_dynamic": TUM_RGBD,
     "wild_slam_mocap": TUM_RGBD,
-    "wild_slam_iphone": RGB_NoPose
+    "wild_slam_iphone": RGB_NoPose,
+    "queue": QueueDataset
 }

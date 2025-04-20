@@ -2,10 +2,12 @@ inherit_from: ./configs/Dynamic/Wild_SLAM_Mocap/wild_slam_mocap.yaml
 scene: crowd_demo
 
 fast_mode: True
-gui: True
+gui: False
+device: "cuda:0"
+dataset: "queue"
 mapping:
   online_plotting: True
 
 data:
-  input_folder: ROOT_FOLDER_PLACEHOLDER/scene1/crowd
+  input_folder: ROOT_FOLDER_PLACEHOLDER/scene1/parking
   output: ./output/Wild_SLAM_Mocap_demo

@@ -12,7 +12,7 @@ from src.trajectory_filler import PoseTrajectoryFiller
 from src.utils.common import setup_seed, update_cam
 from src.utils.Printer import Printer, FontColor
 from src.utils.eval_traj import kf_traj_eval, full_traj_eval
-from src.utils.datasets import BaseDataset
+from src.utils.datasets import BaseDataset, QueueDataset
 from src.tracker import Tracker
 from src.mapper import Mapper
 from src.backend import Backend
@@ -22,12 +22,13 @@ from src.gui import gui_utils, slam_gui
 from thirdparty.gaussian_splatting.scene.gaussian_model import GaussianModel
 
 class SLAM:
-    def __init__(self, cfg, stream: BaseDataset):
+    def __init__(self, cfg, stream: BaseDataset, image_queue=None):
         super(SLAM, self).__init__()
         self.cfg = cfg
         self.device = cfg["device"]
         self.verbose: bool = cfg["verbose"]
         self.logger = None
+        self.image_queue = image_queue
         self.save_dir = cfg["data"]["output"] + "/" + cfg["scene"]
 
         os.makedirs(self.save_dir, exist_ok=True)
@@ -35,6 +36,9 @@ class SLAM:
         self.H, self.W, self.fx, self.fy, self.cx, self.cy = update_cam(cfg)
 
         self.droid_net: DroidNet = DroidNet()
+        
+        # If the dataset type is "queue" and image_queue is provided, use QueueDataset
+        self.stream = stream
 
         self.printer = Printer(
             len(stream)
@@ -145,6 +149,7 @@ class SLAM:
     def terminate(self):
         """fill poses for non-keyframe images and evaluate"""
 
+        print("Terminating")
         if (
             self.cfg["tracking"]["backend"]["final_ba"]
             and self.cfg["mapping"]["eval_before_final_ba"]
@@ -171,6 +176,7 @@ class SLAM:
         if self.cfg["tracking"]["backend"]["final_ba"]:
             self.backend()
 
+        print("Saving video")
         self.video.save_video(f"{self.save_dir}/video.npz")
         if not isinstance(self.stream, RGB_NoPose):
             try:
@@ -189,30 +195,33 @@ class SLAM:
             self.mapper.final_refine(
                 iters=self.cfg["mapping"]["final_refine_iters"]
             )  # this performs a set of optimizations with RGBD loss to correct
-
+        print("Final refinement done")
         # Evaluate the metrics
-        self.mapper.save_all_kf_figs(
-            self.save_dir,
-            iteration="after_refine",
-        )
+        #self.mapper.save_all_kf_figs(
+        #    self.save_dir,
+        #    iteration="after_refine",
+        #)
 
         ## Not used, see head comments of the function
         # self._eval_depth_all(ate_statistics, global_scale, r_a, t_a)
 
-        # Regenerate feature extractor for non-keyframes
-        self.traj_filler.setup_feature_extractor()
-        full_traj_eval(
-            self.traj_filler,
-            self.mapper,
-            f"{self.save_dir}/traj",
-            "full_traj",
-            self.stream,
-            self.logger,
-            self.printer,
-            self.cfg['fast_mode'],
-        )
+        print("Starting full trajectory evaluation")
+        #Regenerate feature extractor for non-keyframes
+        #self.traj_filler.setup_feature_extractor()
+        #full_traj_eval(
+        #    self.traj_filler,
+        #    self.mapper,
+        #    f"{self.save_dir}/traj",
+        #    "full_traj",
+        #    self.stream,
+        #    self.logger,
+        #    self.printer,
+        #    self.cfg['fast_mode'],
+        #)
 
+        print("Saving final GS ply")
         self.mapper.gaussians.save_ply(f"{self.save_dir}/final_gs.ply")
+        print("Final GS ply saved")
 
         if self.cfg["mapping"]["uncertainty_params"]["activate"]:
             torch.save(
@@ -272,7 +281,6 @@ class SLAM:
 
         q_main2vis = mp.Queue() if self.cfg['gui'] else None
         q_vis2main = mp.Queue() if self.cfg['gui'] else None
-
         processes = [
             mp.Process(target=self.tracking, args=(t_pipe,)),
             mp.Process(target=self.mapping, args=(m_pipe,q_main2vis,q_vis2main)),
